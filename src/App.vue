@@ -1,33 +1,38 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-      <router-link to="/test">Test</router-link>
+    <b-navbar type="dark" variant="transparent">
+      <b-collapse id="nav-collapse" is-nav>
+        <b-navbar-nav align="end" class="w-100">
+          <b-navbar-brand to="/">Real Estate</b-navbar-brand>
+        </b-navbar-nav>
+      </b-collapse>
+    </b-navbar>
+    <div class="main">
+      <router-view />
     </div>
-    <router-view />
   </div>
 </template>
 
 <style lang="scss">
+// Bootstrap and its default variables
+@import '../node_modules/bootstrap/scss/bootstrap';
+// BootstrapVue and its default variables
+@import '../node_modules/bootstrap-vue/src/index.scss';
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
+  height: 100vh;
+  background-color: $dark;
 }
 
 #nav {
   padding: 30px;
+}
 
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
-  }
+.main {
+  margin: 0.5rem;
 }
 </style>
