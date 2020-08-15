@@ -15,9 +15,9 @@
 
 <style lang="scss">
 // Bootstrap and its default variables
-@import '../node_modules/bootstrap/scss/bootstrap';
+@import "../node_modules/bootstrap/scss/bootstrap";
 // BootstrapVue and its default variables
-@import '../node_modules/bootstrap-vue/src/index.scss';
+@import "../node_modules/bootstrap-vue/src/index.scss";
 
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
@@ -34,5 +34,13 @@
 
 .main {
   margin: 0.5rem;
+}
+
+.form-group > label {
+  color: $light
+}
+
+.form-group  small {
+  color: $light !important
 }
 </style>
