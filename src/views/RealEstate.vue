@@ -13,6 +13,11 @@
           </b-form-group>
         </b-col>
         <b-col v-bind="columnOptions">
+          <b-form-group label="Repayment rate" label-for="repayment-rate">
+            <percentage id="repayment-rate" v-model.number="repaymentRate" />
+          </b-form-group>
+        </b-col>
+        <b-col v-bind="columnOptions">
           <b-form-group label="Real estate transfer tax" label-for="real-estate-transfer-tax">
             <percentage id="real-estate-transfer-tax" v-model.number="realEstateTransferTax" />
           </b-form-group>
@@ -23,8 +28,20 @@
           </b-form-group>
         </b-col>
         <b-col v-bind="columnOptions">
-          <b-form-group label="FInancing amount" label-for="financing-amount">
+          <b-form-group label="Financing amount" label-for="financing-amount">
             <money id="financing-amount" v-model.number="financing" currency="EUR" :min="0" />
+          </b-form-group>
+        </b-col>
+        <b-col v-bind="columnOptions">
+          <b-form-group label="Annuity interval" label-for="annuity-interval">
+            <b-form-radio-group
+              id="group-intervals"
+              v-model="annuityInterval"
+              :options="annuityIntervalOptions"
+              name="interval-options"
+              buttons
+              button-variant="light"
+            ></b-form-radio-group>
           </b-form-group>
         </b-col>
       </b-form-row>
@@ -41,11 +58,17 @@
         </b-col>
       </b-form-row>
       <b-row>
+        <b-col>
+          <separator />
+        </b-col>
+      </b-row>
+      <b-row>
         <b-col :cols="12">
           <annuity-loan
             :loanAmount="financing"
             :debitInterest="debitInterest"
-            :repayment="repayment"
+            :repayment="repaymentRate"
+            :payment-interval="annuityInterval"
           />
         </b-col>
       </b-row>
@@ -57,8 +80,7 @@
 import Percentage from "@/components/Percentage.vue";
 import Money from "@/components/Money.vue";
 import Separator from "@/components/Separator.vue";
-import AnnuityLoan from "@/components/AnnuityLoan.vue";
-
+import AnnuityLoan, { MONTHLY, YEARLY } from "@/components/AnnuityLoan.vue";
 
 export default {
   name: "RealEstate",
@@ -71,11 +93,19 @@ export default {
       debitInterest: 0.0122,
       realEstateTransferTax: 0.0035,
       notaryFees: 0.003,
-      repayment: 0.02,
+      repaymentRate: 0.02,
       columnOptions: {
         cols: 12,
         md: 4
-      }
+      },
+      annuityInterval: YEARLY,
+      annuityIntervalOptions: [
+        {
+          text: "Yearly",
+          value: YEARLY
+        },
+        { text: "Monthly", value: MONTHLY }
+      ]
     };
   },
   computed: {
