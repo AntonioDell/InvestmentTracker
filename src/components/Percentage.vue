@@ -42,7 +42,7 @@ export default {
   },
   methods:{
     divideBy100(value){
-      return value / 100;
+      return parseFloat((value / 100).toFixed(4));
     }
   },
   
