@@ -59,6 +59,7 @@ import Money from "@/components/Money.vue";
 import Separator from "@/components/Separator.vue";
 import AnnuityLoan from "@/components/AnnuityLoan.vue";
 
+
 export default {
   name: "RealEstate",
   components: { Percentage, Money, Separator, AnnuityLoan },
