@@ -1,10 +1,10 @@
 <template>
   <formatted-number
     :value="value"
+    :format-options="moneyFormat"
     @input="$emit('input', $event)"
     :min="min"
     :max="max"
-    :format-options="moneyFormat"
     v-bind="$attrs"
   />
 </template>

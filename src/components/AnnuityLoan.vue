@@ -26,6 +26,7 @@ import { LocalDate, DateTimeFormatter } from "@js-joda/core";
 
 export const MONTHLY = 0;
 export const YEARLY = 1;
+const TOO_MANY_ROWS_COUNT = 999;
 
 export default {
   name: "annuity-loan",
@@ -43,7 +44,6 @@ export default {
       type: Number,
       default: 0.02,
       validator: function(value) {
-        // The value must match one of these strings
         return value > 0.0001;
       }
     },
@@ -51,7 +51,6 @@ export default {
       default: YEARLY,
       type: Number,
       validator: function(value) {
-        // The value must match one of these strings
         return [MONTHLY, YEARLY].indexOf(value) !== -1;
       }
     },
@@ -100,8 +99,12 @@ export default {
         : this.startDate.plusMonths(1).withDayOfMonth(1);
     },
     repaymentTable() {
-      const table = [];
-      if (this.repayment === 0 || this.loanAmount === 0) {
+      let table = [];
+      if (
+        this.repayment === 0 ||
+        this.loanAmount === 0 ||
+        this.repayment * this.loanAmount < 1
+      ) {
         return table;
       }
       let i = 0;
@@ -112,7 +115,14 @@ export default {
         currentAmount = row.remainingAmount;
         table[i] = row;
         i++;
-      } while (currentAmount > 0);
+      } while (currentAmount > 0 && i < TOO_MANY_ROWS_COUNT);
+
+      if (i === TOO_MANY_ROWS_COUNT) {
+        table = [
+          ["Error"],
+          ["Too many rows to calculate, please change the inputs."]
+        ];
+      }
 
       return table;
     }
@@ -159,10 +169,6 @@ export default {
               )
                 .until(currentYear)
                 .toTotalMonths();
-        console.log(
-          `Months to calculate for year ${currentRow}`,
-          monthsToCalculate
-        );
         for (let m = 0; m < monthsToCalculate; m++) {
           const monthlyAmount = this.calculateMonthlyAmounts(intraYearAmount);
           yearlyAmounts.debit = this.round(
@@ -178,7 +184,6 @@ export default {
 
           intraYearAmount = monthlyAmount.remainingAmount;
         }
-        console.log(`Yearly amounts for year ${currentRow} is`, yearlyAmounts);
         return yearlyAmounts;
       }
     },
