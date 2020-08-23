@@ -33,7 +33,7 @@
 }
 
 .main {
-  margin: 0.5rem;
+  background-color: $dark;
 }
 
 .form-group > label {

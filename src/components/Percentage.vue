@@ -1,12 +1,12 @@
 <template>
   <formatted-number
-    :value="valueData"
+    :value="value"
     :format-options="percentFormat"
     @input="$emit('input', $event)"
     :min="min"
     :max="max"
     :pre-format-function="divideBy100"
-    :step=".0001"
+    :step=".01"
     v-bind="$attrs"
   />
 </template>
@@ -36,18 +36,13 @@ export default {
         style: "percent",
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-      },
-      valueData: this.value
+      }
     };
   },
   methods:{
     divideBy100(value){
       return parseFloat((value / 100).toFixed(4));
     }
-  },
-  
-  watch:{
-     
   }
 };
 </script>

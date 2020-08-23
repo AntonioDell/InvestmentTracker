@@ -24,12 +24,12 @@
         </b-col>
         <b-col v-bind="columnOptions">
           <b-form-group label="Notary fees" label-for="notary-fees">
-            <percentage id="notary-fees" v-model.number="notaryFees" />
+            <money id="notary-fees" v-model="notaryFees" currency="EUR" />
           </b-form-group>
         </b-col>
         <b-col v-bind="columnOptions">
-          <b-form-group label="Financing amount" label-for="financing-amount">
-            <money id="financing-amount" v-model.number="financing" currency="EUR" :min="0" />
+          <b-form-group label="Borrowed capital" label-for="borrowed-capital">
+            <money id="borrowed-capital" v-model.number="borrowedCapital" currency="EUR" :min="0" />
           </b-form-group>
         </b-col>
         <b-col v-bind="columnOptions">
@@ -44,6 +44,36 @@
             ></b-form-radio-group>
           </b-form-group>
         </b-col>
+        <b-col v-bind="columnOptions">
+          <b-form-group label="Rental income" label-for="rental-income">
+            <money id="rental-income" v-model.number="rentalIncome" currency="EUR" :min="0" />
+          </b-form-group>
+        </b-col>
+        <b-col v-bind="columnOptions">
+          <b-form-group label="Building year" label-for="building-year">
+            <b-form-input
+              id="building-year"
+              type="number"
+              :state="isBuildingYearValid"
+              v-model="buildingYear"
+            />
+          </b-form-group>
+        </b-col>
+        <b-col v-bind="columnOptions">
+          <b-form-group label="Building Part of purchasing price" label-for="building-part">
+            <money id="building-part" v-model="buildingPart" currency="EUR" :max="price" :min="0" />
+          </b-form-group>
+        </b-col>
+        <b-col v-bind="columnOptions">
+          <b-form-group label="Additional buying costs" label-for="additional-costs">
+            <money id="additional-costs" v-model="additionalBuyingCosts" currency="EUR" :min="0" />
+          </b-form-group>
+        </b-col>
+        <b-col v-bind="columnOptions">
+          <b-form-group label="Income tax" label-for="income-tax">
+            <percentage id="income-tax" v-model.number="incomeTax" />
+          </b-form-group>
+        </b-col>
       </b-form-row>
       <b-row>
         <b-col>
@@ -53,7 +83,12 @@
       <b-form-row>
         <b-col v-bind="columnOptions">
           <b-form-group label="Total cost" label-for="total-cost">
-            <money id="buying-price" :value="totalCost" currency="EUR" readonly />
+            <money id="total-cost" :value="totalCost" currency="EUR" readonly />
+          </b-form-group>
+        </b-col>
+        <b-col v-bind="columnOptions">
+          <b-form-group label="Return on equity" label-for="return-on-equity">
+            <percentage id="return-on-equity" :value="returnOnEquity" readonly :max="1000" />
           </b-form-group>
         </b-col>
       </b-form-row>
@@ -65,7 +100,7 @@
       <b-row>
         <b-col :cols="12">
           <annuity-loan
-            :loanAmount="financing"
+            :loanAmount="borrowedCapital"
             :debitInterest="debitInterest"
             :repayment="repaymentRate"
             :payment-interval="annuityInterval"
@@ -89,10 +124,10 @@ export default {
   data() {
     return {
       price: 240000,
-      financing: 240000,
+      borrowedCapital: 240000,
       debitInterest: 0.0122,
-      realEstateTransferTax: 0.0035,
-      notaryFees: 0.003,
+      realEstateTransferTax: 0.035,
+      notaryFees: 3183.25,
       repaymentRate: 0.02,
       columnOptions: {
         cols: 12,
@@ -105,16 +140,50 @@ export default {
           value: YEARLY
         },
         { text: "Monthly", value: MONTHLY }
-      ]
+      ],
+      rentalIncome: 9000,
+      buildingYear: 1905,
+      buildingPart: 146496,
+      additionalBuyingCosts: 300,
+      incomeTax: 0.42 //Based on income -> https://www.finanz.at/steuern/lohnsteuertabelle/
     };
   },
   computed: {
-    totalCost: function() {
+    isBuildingYearValid() {
       return (
-        this.price +
-        this.price * this.realEstateTransferTax +
-        this.price * this.notaryFees
+        !isNaN(this.buildingYear) &&
+        this.buildingYear > 1800 &&
+        this.buildingYear < 2200
       );
+    },
+    totalCost() {
+      return (
+        this.price + this.price * this.realEstateTransferTax + this.notaryFees + this.additionalBuyingCosts
+      );
+    },
+    returnOnEquity() {
+      const equity = this.totalCost - this.borrowedCapital;
+
+      const writeOffRate = this.buildingYear < 1920 ? 0.025 : 0.02;
+      //const writeOffYears = wasBuildingFinishedBefore1920 ? 40 : 50;
+      const writeOffAmount = this.totalCost - (this.price - this.buildingPart);
+      const taxWriteOff = writeOffAmount * writeOffRate;
+
+      const taxDeductable =
+        taxWriteOff +
+        this.borrowedCapital * this.debitInterest;
+      console.log("ADA: taxDeductable is", taxDeductable);
+      const netIncome =
+        this.rentalIncome -
+        Math.max(0, this.rentalIncome - taxDeductable) * this.incomeTax;
+
+console.log("ADA: netIncome is", netIncome);
+console.log("ADA: equity is", equity);
+      const roe = (netIncome / equity);
+
+      console.log("ADA: ROE is", roe);
+
+      return roe;
     }
   }
 };
