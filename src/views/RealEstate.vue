@@ -41,7 +41,7 @@
               name="interval-options"
               buttons
               button-variant="light"
-            ></b-form-radio-group>
+            />
           </b-form-group>
         </b-col>
         <b-col v-bind="columnOptions">
@@ -74,6 +74,11 @@
             <percentage id="income-tax" v-model.number="incomeTax" />
           </b-form-group>
         </b-col>
+        <b-col v-bind="columnOptions">
+          <b-form-group label="Debit interest fixation (in years)" label-for="interest-fixation">
+            <b-form-input id="interest-fixation" type="number" v-model.number="interestFixationYears" :min="0" />
+          </b-form-group>
+        </b-col>
       </b-form-row>
       <b-row>
         <b-col>
@@ -91,6 +96,16 @@
             <percentage id="return-on-equity" :value="returnOnEquity" readonly :max="1000" />
           </b-form-group>
         </b-col>
+        <b-col v-bind="columnOptions">
+          <b-form-group label="Sum debit payments" label-for="sum-debit">
+            <money id="sum-debit" :value="sumDebit" currency="EUR" readonly />
+          </b-form-group>
+        </b-col>
+        <b-col v-bind="columnOptions">
+          <b-form-group label="Residual debt at fixation end" label-for="residual-debt">
+            <money id="residual-debt" :value="residualDebt" currency="EUR" readonly />
+          </b-form-group>
+        </b-col>
       </b-form-row>
       <b-row>
         <b-col>
@@ -104,6 +119,9 @@
             :debitInterest="debitInterest"
             :repayment="repaymentRate"
             :payment-interval="annuityInterval"
+            :interest-fixation-years="interestFixationYears"
+            @sumdebit="sumDebit = $event"
+            @fixationenddebt="residualDebt = $event"
           />
         </b-col>
       </b-row>
@@ -145,7 +163,10 @@ export default {
       buildingYear: 1905,
       buildingPart: 146496,
       additionalBuyingCosts: 300,
-      incomeTax: 0.42 //Based on income -> https://www.finanz.at/steuern/lohnsteuertabelle/
+      incomeTax: 0.42, //Based on income -> https://www.finanz.at/steuern/lohnsteuertabelle/
+      sumDebit: 0,
+      residualDebt: 0,
+      interestFixationYears: 10
     };
   },
   computed: {
@@ -158,7 +179,10 @@ export default {
     },
     totalCost() {
       return (
-        this.price + this.price * this.realEstateTransferTax + this.notaryFees + this.additionalBuyingCosts
+        this.price +
+        this.price * this.realEstateTransferTax +
+        this.notaryFees +
+        this.additionalBuyingCosts
       );
     },
     returnOnEquity() {
@@ -170,16 +194,15 @@ export default {
       const taxWriteOff = writeOffAmount * writeOffRate;
 
       const taxDeductable =
-        taxWriteOff +
-        this.borrowedCapital * this.debitInterest;
+        taxWriteOff + this.borrowedCapital * this.debitInterest;
       console.log("ADA: taxDeductable is", taxDeductable);
       const netIncome =
         this.rentalIncome -
         Math.max(0, this.rentalIncome - taxDeductable) * this.incomeTax;
 
-console.log("ADA: netIncome is", netIncome);
-console.log("ADA: equity is", equity);
-      const roe = (netIncome / equity);
+      console.log("ADA: netIncome is", netIncome);
+      console.log("ADA: equity is", equity);
+      const roe = netIncome / equity;
 
       console.log("ADA: ROE is", roe);
 

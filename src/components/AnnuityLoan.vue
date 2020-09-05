@@ -1,28 +1,15 @@
 <template>
-  <div class="overflow-auto">
-    <b-pagination
-      v-if="repaymentTable.length > perPage"
-      :total-rows="repaymentTable.length"
-      v-model="currentPage"
-      :per-page="perPage"
-      aria-controls="annuity-table"
-    ></b-pagination>
-    <b-table
-      id="annuity-table"
-      dark
-      striped
-      hover
-      :items="provideRepaymentTable"
-      :per-page="perPage"
-      :current-page="currentPage"
-      ref="table"
-    ></b-table>
+  <div>
+    <unscheduled-payments />
+    <split-table dark striped hover :items="repaymentTable" :perPage="perPage" />
   </div>
 </template>
 
 <script>
 import _ from "lodash";
 import { LocalDate, DateTimeFormatter } from "@js-joda/core";
+import SplitTable from "@/components/SplitTable.vue";
+import UnscheduledPayments from "@/components/UnsechudeldPayments.vue";
 
 export const MONTHLY = 0;
 export const YEARLY = 1;
@@ -30,6 +17,7 @@ const TOO_MANY_ROWS_COUNT = 999;
 
 export default {
   name: "annuity-loan",
+  components: { SplitTable, UnscheduledPayments },
   props: {
     loanAmount: {
       type: Number,
@@ -40,6 +28,7 @@ export default {
       }
     },
     debitInterest: Number,
+    interestFixationYears: Number,
     repayment: {
       type: Number,
       default: 0.02,
@@ -108,21 +97,31 @@ export default {
         return table;
       }
       let i = 0;
+      const fixationEndIndex =
+        this.paymentInterval === YEARLY
+          ? this.interestFixationYears
+          : this.interestFixationYears * 12;
       let currentAmount = this.loanAmount;
 
       do {
         const row = this.calculateNextRow(currentAmount, i);
         currentAmount = row.remainingAmount;
         table[i] = row;
+        if (i === fixationEndIndex) {
+          this.$emit("fixationenddebt", row.remainingAmount);
+        }
         i++;
       } while (currentAmount > 0 && i < TOO_MANY_ROWS_COUNT);
 
       if (i === TOO_MANY_ROWS_COUNT) {
-        table = [
-          ["Error"],
-          ["Too many rows to calculate, please change the inputs."]
-        ];
+        console.error("Too many rows to calculate.");
+        return [];
       }
+
+      const sumDebit = table
+        .map(row => row.debit)
+        .reduce((debit, debitSum) => debit + debitSum, 0);
+      this.$emit("sumdebit", sumDebit);
 
       return table;
     }
@@ -131,14 +130,6 @@ export default {
     refreshTable: _.debounce(function() {
       this.$refs.table.refresh();
     }, 1500),
-    provideRepaymentTable({ currentPage, perPage }) {
-      const lowerBounds = (currentPage - 1) * perPage;
-      const upperBounds = lowerBounds + perPage;
-
-      return this.repaymentTable.filter(
-        (row, index) => index >= lowerBounds && index < upperBounds
-      );
-    },
     calculateNextRow(currentAmount, currentRow) {
       const dateFormatter = DateTimeFormatter.ofPattern("MM.yyyy");
       if (this.paymentInterval === MONTHLY) {
