@@ -1,59 +1,67 @@
 <template>
-  <div>
-    <b-input-group id="add-payment">
-      <b-input-group-prepend>
-        <b-form-radio-group
+  <b-container>
+    <b-row>
+      <b-col :cols="2">
+        <b-form-select
           id="group-recurring-rate"
           v-model="addPaymentRecurringRate"
           :options="recurringRateOptions"
-          name="group-recurring-rate"
-          buttons
-          button-variant="light"
         />
+      </b-col>
+      <b-col :cols="3">
         <b-form-datepicker
           id="datepicker-dateformat2"
           v-model="addPaymentDate"
           value-as-date
           :date-format-options="{ year: 'numeric', month: 'numeric', day: 'numeric' }"
         />
-      </b-input-group-prepend>
-
-      <money id="add-payment-amount" v-model="addPaymentAmount" currency="EUR" />
-
-      <b-input-group-append>
-        <b-button variant="success" @click="addPayment()">Add</b-button>
-      </b-input-group-append>
-    </b-input-group>
-    <b-input-group v-for="(payment, index) in paymentsData" :key="payment.id">
-      <b-input-group-prepend>
-        <b-button
-          :id="payment.id+'-recurring-rate'"
-          disabled
-          variant="light"
-        >{{recurringRateOptions.find(option => option.value === payment.recurringRate).text}}</b-button>
-
-        <b-form-datepicker
-          :id="payment.id+'-reference-date'"
-          :value="payment.referenceDate"
-          value-as-date
-          :date-format-options="{ year: 'numeric', month: 'numeric', day: 'numeric' }"
-        />
-      </b-input-group-prepend>
-
-      <money :id="payment.id+'-amount'" :value="payment.amount" currency="EUR" readonly />
-
-      <b-input-group-append>
-        <b-button variant="success" @click="removePayment(index)">Remove</b-button>
-      </b-input-group-append>
-    </b-input-group>
-  </div>
+      </b-col>
+      <b-col :cols="6">
+        <money id="add-payment-amount" v-model="addPaymentAmount" currency="EUR" />
+      </b-col>
+      <b-col :cols="1">
+        <b-button block variant="success" @click="addPayment()">
+          <b-icon-plus />
+        </b-button>
+      </b-col>
+    </b-row>
+    <b-row>
+      <template v-for="(payment, index) in paymentsData">
+        <b-col :cols="2" :key="payment.id+'col1'">
+          <b-form-input
+            :id="payment.id+'-recurring-rate'"
+            :value="recurringRateOptions.find(option => option.value === payment.recurringRate).text"
+            readonly
+          />
+        </b-col>
+        <b-col :cols="3" :key="payment.id+'col2'">
+          <b-form-datepicker
+            :id="payment.id+'-reference-date'"
+            :value="payment.referenceDate"
+            value-as-date
+            readonly
+            :date-format-options="{ year: 'numeric', month: 'numeric', day: 'numeric' }"
+          />
+        </b-col>
+        <b-col :cols="6" :key="payment.id+'col3'">
+          <money :id="payment.id+'-amount'" :value="payment.amount" currency="EUR" readonly />
+        </b-col>
+        <b-col :cols="1" :key="payment.id+'col4'">
+          <b-button block variant="danger" @click="removePayment(index)">
+            <b-icon-x />
+          </b-button>
+        </b-col>
+      </template>
+    </b-row>
+  </b-container>
 </template>
 
 <script>
 import Money from "@/components/Money.vue";
+import { BIconPlus, BIconX } from "bootstrap-vue";
 export default {
   name: "unscheduled-payments",
-  components: { Money },
+  components: { Money, BIconPlus, BIconX },
   props: {
     payments: {
       type: Array,
@@ -65,9 +73,9 @@ export default {
       paymentsData: this.payments,
       addPaymentRecurringRate: RECURRING_RATE_NONE,
       addPaymentAmount: 0,
-      addPaymentDate: new Date(),
+      addPaymentDate: null,
       recurringRateOptions: [
-        { text: "None", value: RECURRING_RATE_NONE },
+        { text: "Single", value: RECURRING_RATE_NONE },
         { text: "Monthly", value: RECURRING_RATE_MONTHLY },
         {
           text: "Yearly",
@@ -78,9 +86,6 @@ export default {
   },
   methods: {
     addPayment() {
-      console.log(
-        `ADA: ${this.addPaymentRecurringRate} ${this.addPaymentAmount} ${this.addPaymentDate}`
-      );
       if (
         this.addPaymentRecurringRate !== undefined &&
         this.addPaymentDate &&
@@ -90,7 +95,6 @@ export default {
           this.paymentsData.length > 0
             ? this.paymentsData[this.paymentsData.length - 1].id + 1
             : 0;
-        console.log(`ADA: ID is ${id}`);
         this.paymentsData.push(
           new Payment(
             this.addPaymentRecurringRate,
@@ -99,6 +103,9 @@ export default {
             id
           )
         );
+        this.addPaymentRecurringRate = RECURRING_RATE_NONE;
+        this.addPaymentDate = null;
+        this.addPaymentAmount = 0;
       }
     },
     removePayment(index) {

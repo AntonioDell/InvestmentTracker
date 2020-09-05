@@ -1,7 +1,7 @@
 <template>
   <input
     :value="displayValue"
-    :type="type"
+    :type="isFocused ? 'number' : 'text'"
     :min="min"
     :max="max"
     :step="step"
@@ -39,16 +39,16 @@ export default {
   },
   watch: {
     value(newValue) {
-      if (this.readonlyData) {
+      if (this.readonlyData || !this.isFocused ) {
         this.displayValue = this.formatText(
           this.formatNumber(newValue, this.min, this.max)
         );
-      }
+      } 
     }
   },
   data() {
     return {
-      type: "text",
+      isFocused: false,
       displayValue: this.formatText(
         this.formatNumber(this.value, this.min, this.max)
       ),
@@ -90,14 +90,14 @@ export default {
       this.displayValue = this.formatNumber(
         this.preFormatFunction(this.fromLocaleString(this.displayValue))
       );
-      this.type = "number";
+      this.isFocused = true;
     },
     onBlur() {
       if (this.readonlyData) {
         return;
       }
       this.displayValue = this.formatText(this.displayValue);
-      this.type = "text";
+      this.isFocused = false;
     },
     fromLocaleString(localizedString) {
       const decimalSeparator = (1.1).toLocaleString().substring(1, 2);
